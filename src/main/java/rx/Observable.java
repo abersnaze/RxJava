@@ -6606,6 +6606,43 @@ public class Observable<T> {
     }
 
     /**
+     * Uses the items emitted by an {@link Observable} as starting points for a breadth first search of a graph. The function
+     * supplied to this operator is used to access the reachable items for previously emitted item. Once all inner Observables
+     * emitted have finished the outer Observable will complete.
+     *
+     * @param func
+     *            a function to map values to an {@link Observable} of subsequent values.
+     * @return
+     */
+    @Experimental
+    public final Observable<Observable<T>> expand(Func1<? super T, ? extends Observable<T>> func) {
+        return unsafeCreate(new OnSubscribeExpand<T>(this, func, null));
+    }
+
+    /**
+     * Uses the items emitted by an {@link Observable} as starting points for a breadth first search of a graph. The function
+     * supplied to this operator is used to access the reachable items for previously emitted item. Once all inner Observables
+     * emitted have finished the outer Observable will complete.
+     *
+     * To walk a graph with cycles this operator manages a state object that can be mutated to track previously visited elements.
+     *
+     * @param func
+     *            a function to map values to an {@link Observable} of subsequent values.
+     * @param stateFactory
+     *            on each subscription this function will be called and the state object to track if values should be visited.
+     * @param shouldVisit
+     *            for a given state and value should the value be filtered from recursive processing.
+     * @return
+     */
+    @Experimental
+    public final <S> Observable<Observable<T>> expand(Func1<? super T, ? extends Observable<T>> func, Func1<? super T, Boolean> shouldVisit) {
+        if (shouldVisit == null) {
+            throw new NullPointerException("expand requires the shouldVisit to not be null");
+        }
+        return unsafeCreate(new OnSubscribeExpand<T>(this, func, shouldVisit));
+    }
+
+    /**
      * Filters items emitted by an Observable by only emitting those that satisfy a specified predicate.
      * <p>
      * <img width="640" height="310" src="https://raw.github.com/wiki/ReactiveX/RxJava/images/rx-operators/filter.png" alt="">
